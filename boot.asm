@@ -45,9 +45,7 @@ Main:
     mov     es, ax
     mov     bx, FATST.SecondSector
     mov     dl, byte[DriveId]
-    mov     al, 0x1
-    mov dh, 0x0
-    mov cx, 0x1
+    mov     al, 0x3
     call    Read
     jnc     Continue
     mov     si, MG_ELD
