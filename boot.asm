@@ -20,42 +20,40 @@ Main:
     mov     [DriveId], dl
     ; Print init messages
     call    VGA_Init
-    mov     si, MG_INI
+    mov     si, MG_INIT
     call    Print
     ; Hard disk reset
     call    Disk_Reset
     ; I13 Extension check
     call    I13EXT_Check
     jnc     EXTSupported
-    mov     si, MG_ESP
+    mov     si, MG_ESPT
     call    Print
     call    Loop        ; Die if no supported
 
 EXTSupported:
-    ; Calculate RootSector
-    EVAL_RootSector word[RootLBA]
-    mov     ax, word[RootLBA]
-    ; Calculate RootLength
-    EVAL_RootLength word[RootLen]
-    mov     ax, word[RootLen]
+    ; Calculate Root values
+    EVAL_RootSector word[RootLBA] ; Starting sector (LBA)
+    EVAL_RootLength word[RootLen] ; Size in sectors
 
-    ; Initialize DAP Packet
+    ; Initialize DAP-Packet
     ;
     mov     byte[FAT.DAP + DAP.Size], 0x10
-    mov     word[FAT.DAP + DAP.Len], 0x1
     ; ES:BX
     mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
-    mov     word[FAT.DAP + DAP.DestOffset], FAT.SecondSector
-    ; LBA
+    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
+    ; LBA && Length
     mov     ax, word[RootLBA]
     mov     word[FAT.DAP + DAP.LBA], ax
+    mov     ax, word[RootLen]
+    mov     word[FAT.DAP + DAP.Len], ax
 
     ; Set DAP and Drive
     mov     si, FAT.DAP
     mov     dl, byte[DriveId]
     call    Read
     jnc     Continue
-    mov     si, MG_ELD
+    mov     si, MG_ELDG
     call    Print
     mov     cx, 0x2D
     mov     dx, 0xC6C0
@@ -63,6 +61,9 @@ EXTSupported:
     call    Reboot
 
 Continue:
+    FIND_SystemFile KRNFILE, 11, FAT.DataArea
+    mov     si, MG_KRNF ; Assuming kernel.bin
+    call    Print
     call    Loop
 
 %include "io.asm"
@@ -70,11 +71,14 @@ Continue:
 DriveId     db 0x00
 RootLBA     dw 0x0000
 RootLen     dw 0x0000
+; CST DATA
+KRNFILE     db "KERNEL  ", "BIN"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
-MG_INI      db " v Basic-Boot startup", 13, 10, 0
-MG_ESP      db " * Bios not supported!", 13, 10, 0
-MG_ELD      db " * Error reading sector. Rebooting...", 13, 10, 0
-;Fill bytes with 0x00 up to magic numb
-;Magic Number for the BIOS check.
+MG_INIT     db " v Basic-Boot startup", 13, 10, 0
+MG_ESPT     db " * Bios not supported!", 13, 10, 0
+MG_ELDG     db " * Error reading sector. Rebooting...", 13, 10, 0
+MG_KRNF     db " - Kernel Found! Booting...", 13, 10, 0
+; Fill bytes with 0x00 up to magic numb
+; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
     dw 0xAA55

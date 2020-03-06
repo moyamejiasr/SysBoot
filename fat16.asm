@@ -28,7 +28,21 @@ struc FAT
     ; Second sector (FREE)
     ;
     .DAP:               resb 16
-    .SecondSector:      resb 496
+    .DataArea:          resb 496
+endstruc
+
+; STRUCTURE DES (Directory Entry Structure)
+struc DES
+    .FileName:      resb 8
+    .Extension:     resb 3
+    .Attribute:     resb 1
+    .Reserved:      resb 1
+    .Creation:      resb 5
+    .LastAccess:    resw 1
+    .Reserved2:     resw 1
+    .LastChange:    resd 1
+    .Cluster:       resw 1
+    .FileSize:      resd 1
 endstruc
 
 ; MACRO EVAL_RootSector
@@ -47,7 +61,7 @@ endstruc
 %endmacro
 
 ; MACRO EVAL_RootLength
-; Calculate size in bytes of root directory
+; Calculate lenght in sectors of root directory
 ; (RootDirEntries * 0x20) / BytesPerSector
 ; 1 Destination
 %macro  EVAL_RootLength 1
@@ -57,5 +71,23 @@ endstruc
     xor     dx, dx      ; To divide DX:AX/
     div     word[FAT.BytesPerSector]
     mov     %1, ax
+    popa
+%endmacro
+
+; MACRO FIND_SystemFile
+; Find file given a valid 11b len name in directory
+; 3 Filename, Size, DES
+%macro  FIND_SystemFile 3
+    pusha
+    mov     ax, ds      ; For correctly setting es
+    mov     es, ax
+    mov     ax, %1      ; For ds:si = Filename address
+    mov     si, ax
+Check_Entry:
+    mov     cx, %2      ; Directory entries filenames are 11 bytes.
+    mov     di, %3      ; es:di = Directory entry address
+    repz cmpsb          ; Compare filename to memory.
+    add     di, 0x20    ; Move to next entry. Entries are 32 bytes. (Just in case)
+    jne     Check_Entry
     popa
 %endmacro
