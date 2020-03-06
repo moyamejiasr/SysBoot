@@ -22,7 +22,9 @@ Main:
     call    VGA_Init
     mov     si, MG_INIT
     call    Print
-    ; I13 Extension check
+    ; I13 Extension check & init packet
+    mov     byte[FAT.DAP + DAP.Size], 0x10
+    mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
     call    I13EXT_Check
     jnc     EXTSupported
     mov     si, MG_ESPT
@@ -33,13 +35,9 @@ EXTSupported:
     ; Calculate Root values
     EVAL_RootSector word[RootLBA] ; Starting sector (LBA)
     EVAL_RootLength word[RootLen] ; Size in sectors
-
-    ; Initialize DAP-Packet
-    ;
+    ; Modify DAP-Packet : Load Root Directory
     call    Disk_Reset
-    mov     byte[FAT.DAP + DAP.Size], 0x10
     ; ES:BX
-    mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
     mov     word[FAT.DAP + DAP.DestOffset], FAT.KernelCluster
     ; LBA && Length
     mov     ax, word[RootLBA]
@@ -48,23 +46,17 @@ EXTSupported:
     mov     word[FAT.DAP + DAP.Len], ax
     ; Set DAP and Drive
     mov     si, FAT.DAP
-    mov     dl, byte[DriveId]
-
     call    Read
     jc      OnReadFail
+
     ; Assuming kernel.bin IS present
     FIND_SystemFile KRNFILE, 6, FAT.KernelCluster
 
-
-    
-    ; Calculate FAT first table
+    ; Calculate FAT table
     EVAL_FATSSector word[FATSLBA]
-
-    ; Modify DAP-Packet
-    ;
+    ; Modify DAP-Packet : Load Fat Table
     call    Disk_Reset
     ; ES:BX
-    mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
     mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
     ; LBA && Length
     mov     ax, word[FATSLBA]
@@ -73,18 +65,31 @@ EXTSupported:
     mov     word[FAT.DAP + DAP.Len], ax
     ; Set DAP and Drive
     mov     si, FAT.DAP
-    mov     dl, byte[DriveId]
+    call    Read
+    jc      OnReadFail
+
+    mov     ax, [FAT.KernelCluster]
+    add     ax, [RootLBA]
+    add     ax, [RootLen]
+    sub     ax, 2
+    ; Modify DAP-Packet
+    call    Disk_Reset
+    ; ES:BX
+    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
+    ; LBA && Length
+    ;mov     ax, word[FATSLBA]
+    mov     word[FAT.DAP + DAP.LBA], ax
+    mov     ax, 1
+    mov     word[FAT.DAP + DAP.Len], ax
+    ; Set DAP and Drive
+    mov     si, FAT.DAP
     call    Read
     jc      OnReadFail
 
 
-    mov     si, MG_KRNF 
-    call    Print
     call    Loop
 
 OnReadFail:
-    mov     si, MG_ELDG
-    call    Print
     mov     cx, 0x2D
     mov     dx, 0xC6C0
     call    Sleep
@@ -101,9 +106,8 @@ FATSLBA     dw 0x0000
 KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
 MG_INIT     db "BasicOS1.0", 13, 10, 0
-MG_ESPT     db "* Error.", 13, 10, 0
-MG_ELDG     db "* Error. Rebooting", 13, 10, 0
-MG_KRNF     db "- Kernel Found. Init", 13, 10, 0
+MG_ESPT     db "* Error", 13, 10, 0
+MG_KRNF     db "- Ok", 13, 10, 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
