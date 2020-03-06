@@ -68,6 +68,16 @@ Print:
     popa
     ret
 
+; FUNCTION Disk_Reset
+; Reset disk position
+; 
+Disk_Reset:
+    pusha
+    xor     ah, ah
+    int     0x13
+    popa
+    ret
+
 ; FUNCTION I13EXT_Check
 ; Check if INT13 extensions are available
 ; DL DriveId
@@ -86,8 +96,10 @@ I13EXT_Check:
 ;
 ; output:   cf (0 = success, 1 = failure)
 Read:
+    pusha
     mov     ah, 0x42
     int     0x13
+    popa
     ret
 
 ; FUNCTION Loop

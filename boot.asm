@@ -22,12 +22,14 @@ Main:
     call    VGA_Init
     mov     si, MG_INI
     call    Print
+    ; Hard disk reset
+    call    Disk_Reset
     ; I13 Extension check
     call    I13EXT_Check
     jnc     EXTSupported
     mov     si, MG_ESP
     call    Print
-    call    Loop        ; Die if not support
+    call    Loop        ; Die if no supported
 
 EXTSupported:
     ; Calculate RootSector
@@ -40,13 +42,13 @@ EXTSupported:
     ; Initialize DAP Packet
     ;
     mov     byte[FAT.DAP + DAP.Size], 0x10
-    ; LBA and sectors to read
-    mov     ax, word[RootLBA]
-    mov     word[FAT.DAP + DAP.LBA], ax
     mov     word[FAT.DAP + DAP.Len], 0x1
     ; ES:BX
     mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
     mov     word[FAT.DAP + DAP.DestOffset], FAT.SecondSector
+    ; LBA
+    mov     ax, word[RootLBA]
+    mov     word[FAT.DAP + DAP.LBA], ax
 
     ; Set DAP and Drive
     mov     si, FAT.DAP
