@@ -68,6 +68,14 @@ Print:
     popa
     ret
 
+; FUNCTION Sleep
+; Waits the desgined time
+; (CX HiWord, DX LoWord) Microseconds 1M=1Sec
+Sleep:
+    mov     ah, 0x86    ; Specify 0x15 WAIT
+    int     0x15
+    ret
+
 ; FUNCTION Disk_Reset
 ; Reset disk position
 ; 
@@ -101,6 +109,12 @@ Read:
     int     0x13
     popa
     ret
+
+; FUNCTION Reboot
+; Reboot the entire system
+;
+Reboot:
+    int     0x19        ; Reboot Services
 
 ; FUNCTION Loop
 ; Forever loop system

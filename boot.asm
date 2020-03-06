@@ -57,6 +57,10 @@ EXTSupported:
     jnc     Continue
     mov     si, MG_ELD
     call    Print
+    mov     cx, 0x2D
+    mov     dx, 0xC6C0
+    call    Sleep
+    call    Reboot
 
 Continue:
     call    Loop
@@ -69,7 +73,7 @@ RootLen     dw 0x0000
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
 MG_INI      db " v Basic-Boot startup", 13, 10, 0
 MG_ESP      db " * Bios not supported!", 13, 10, 0
-MG_ELD      db " * Unable to read sector!", 13, 10, 0
+MG_ELD      db " * Error reading sector. Rebooting...", 13, 10, 0
 ;Fill bytes with 0x00 up to magic numb
 ;Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
