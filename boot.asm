@@ -4,7 +4,7 @@
 
 %include "fat16.asm"
 [BITS 16]               ; 16bt Mode Processor
-[ORG FATST.CodeSection] ; Jump FAT table data
+[ORG FAT.CodeSection] ; Jump FAT table data
 
 ; FUNCTION Main
 ; Main sector loader
@@ -16,36 +16,41 @@ Main:
     xor     ax, ax
     mov     ss, ax
     mov     sp, 0x7C00  ; SS:SP 0x0000:0x7C00
-    ; Save driveid to mem
+    ; Save DriveId to mem
     mov     [DriveId], dl
     ; Print init messages
     call    VGA_Init
     mov     si, MG_INI
     call    Print
+    ; I13 Extension check
+    call    I13EXT_Check
+    jnc     EXTSupported
+    mov     si, MG_ESP
+    call    Print
+    call    Loop        ; Die if not support
 
-    mov     ax, FATST.SecondSector
-    call    Printw
-    call    Printe
-
+EXTSupported:
+    ; Calculate RootSector
     EVAL_RootSector word[RootLBA]
     mov     ax, word[RootLBA]
-    call    Printw
-    call    Printe
-
+    ; Calculate RootLength
     EVAL_RootLength word[RootLen]
     mov     ax, word[RootLen]
-    call    Printw
-    call    Printe
 
-    mov     ax, 0x1234
-    call    Printw
+    ; Initialize DAP Packet
+    ;
+    mov     byte[FAT.DAP + DAP.Size], 0x10
+    ; LBA and sectors to read
+    mov     ax, word[RootLBA]
+    mov     word[FAT.DAP + DAP.LBA], ax
+    mov     word[FAT.DAP + DAP.Len], 0x1
+    ; ES:BX
+    mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
+    mov     word[FAT.DAP + DAP.DestOffset], FAT.SecondSector
 
-    EVAL_LBA2CHS word[RootLBA]
-    mov     ax, 0x07C0
-    mov     es, ax
-    mov     bx, FATST.SecondSector
+    ; Set DAP and Drive
+    mov     si, FAT.DAP
     mov     dl, byte[DriveId]
-    mov     al, 0x3
     call    Read
     jnc     Continue
     mov     si, MG_ELD
@@ -61,6 +66,7 @@ RootLBA     dw 0x0000
 RootLen     dw 0x0000
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
 MG_INI      db " v Basic-Boot startup", 13, 10, 0
+MG_ESP      db " * Bios not supported!", 13, 10, 0
 MG_ELD      db " * Unable to read sector!", 13, 10, 0
 ;Fill bytes with 0x00 up to magic numb
 ;Magic Number for the BIOS check.

@@ -1,3 +1,13 @@
+; STRUCTURE DAP (Disk Address Packet)
+struc DAP
+    .Size:          resb 1
+    .Reserved:      resb 1
+    .Len:           resw 1
+    .DestOffset:    resw 1
+    .DestSegment:   resw 1
+    .LBA:           resd 1
+endstruc
+
 ; FUNCTION VGA_Init
 ; Initialize VGA video mode
 ; 
@@ -8,7 +18,7 @@ VGA_Init:
     popa
     ret
 
-; PROCEDURE Printb
+; FUNCTION Printb
 ; Prints hex byte to screen
 ; AL number value
 Printb:
@@ -36,7 +46,7 @@ Printw:
     popa
     ret
 
-; PROCEDURE Printe
+; FUNCTION Printe
 ; Prints an endl
 ;
 Printe:
@@ -58,17 +68,25 @@ Print:
     popa
     ret
 
-; PROCEDURE Read
+; FUNCTION I13EXT_Check
+; Check if INT13 extensions are available
+; DL DriveId
+I13EXT_Check:
+    pusha
+    mov     ah, 41h
+    mov     bx, 55AAh
+    int     13h
+    popa
+    ret
+
+; FUNCTION Read
 ; Read from drive
-; (mov dl, xx) DriveId
-; (mov dh, xx) Head
-; (mov cx, xx) hi 2 bits = cyl, low 6 bits = sector
-; (mov al, xx) Number of sectors
-; (ES:BX) Destination
+; DL DriveId
+; AX DAP
 ;
 ; output:   cf (0 = success, 1 = failure)
 Read:
-    mov     ah, 0x02
+    mov     ah, 0x42
     int     0x13
     ret
 

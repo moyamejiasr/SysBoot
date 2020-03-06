@@ -1,5 +1,5 @@
 ; STRUCTURE FAT16 (File Allocation Table)
-struc FATST
+struc FAT
     .JumpInstruction:   resb 3
     .OEMIdentifier:     resb 8
     .BytesPerSector:    resw 1
@@ -27,7 +27,8 @@ struc FATST
     .SectorCheck:       resb 2
     ; Second sector (FREE)
     ;
-    .SecondSector:      resb 1
+    .DAP:               resb 16
+    .SecondSector:      resb 496
 endstruc
 
 ; MACRO EVAL_RootSector
@@ -37,10 +38,10 @@ endstruc
 %macro  EVAL_RootSector 1
     pusha
     xor     ax, ax
-    mov     al, byte[FATST.FATCopies]
-    mul     word[FATST.SectorsPerFAT]
-    add     eax, dword[FATST.HiddenSectors]
-    add     ax, word[FATST.ReservedSectors]
+    mov     al, byte[FAT.FATCopies]
+    mul     word[FAT.SectorsPerFAT]
+    add     eax, dword[FAT.HiddenSectors]
+    add     ax, word[FAT.ReservedSectors]
     mov     %1, ax
     popa
 %endmacro
@@ -52,46 +53,9 @@ endstruc
 %macro  EVAL_RootLength 1
     pusha
     mov     ax, 0x20
-    mul     word[FATST.RootDirEntries]
+    mul     word[FAT.RootDirEntries]
     xor     dx, dx      ; To divide DX:AX/
-    div     word[FATST.BytesPerSector]
+    div     word[FAT.BytesPerSector]
     mov     %1, ax
     popa
-%endmacro
-
-; MACRO EVAL_LBA2CHS
-; This routine converts LBA (edx:eax) to CHS
-; Sector   = (LBA mod SPT)+1
-; Head     = (LBA  /  SPT) mod Heads
-; Cylinder = (LBA  /  SPT)  /  Heads
-;     (SPT = Sectors per Track)
-;     (LBA = Logical Block Address (AX))
-%macro  EVAL_LBA2CHS 1
-    mov     ax, %1
-    ; (LBA / SPT)
-    xor     dx,dx       ; because dx:ax / cx
-    mov     cx, word[FATST.SectorsPerTrack]
-    div     cx
-    push    dx
-    ; (Result / Heads)
-    xor     dx, dx      ; because dx:ax / cx
-    mov     cx, word[FATST.NumberOfHeads]
-    div     cx
-    ; Sector + 1
-    pop     cx          ; cx = sector
-    inc     cx          ; cause one based
-
-    ; Current register values:
-    ; cx = sector (1 based)
-    ; dx = head
-    ; ax = cyl
-    ; We need:
-    ;  ch = low eight bits of cylinder number
-    ;  cl = sector number 1-63 (bits 0-5)
-    ;     = high two bits of cylinder (bits 6-7, hard disk only)
-    ;  dh = head number
-    mov     dh, dl      ; dh = head
-    mov     ch, al      ; ch = low 8 bits of cyl
-    shl     ah, 6       ; set hi 2 bits of cyl in cl
-    or      cl, ah    
 %endmacro
