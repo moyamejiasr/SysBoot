@@ -28,7 +28,8 @@ struc FAT
     ; Second sector (FREE)
     ;
     .DAP:               resb 16
-    .DataArea:          resb 496
+    .KernelCluster:     resw 1
+    .DataArea:          resb 494
 endstruc
 
 ; STRUCTURE DES (Directory Entry Structure)
@@ -91,18 +92,19 @@ endstruc
 ; 3 Filename, Size, DESListItem
 %macro  FIND_SystemFile 3
     pusha
-    ; ES:DI = Directory entry address
+    ; ES:BX(DI) = Directory entry address
     mov     ax, ds
     mov     es, ax
-    mov     di, word[%3]
-    ; DS:SI = Filename address
-    mov     ax, %1
-    mov     si, ax
-Check_Entry:
+    mov     bx, %3
+Check_DES:
     mov     cx, %2      ; Directory entries filenames size
-    repz cmpsb          ; Compare filename to memory.
-    add     di, 0x20-%2 ; Move to next entry (Just in case)
-    jne     Check_Entry
-    mov     word[%3], di
+    mov     si, %1      ; Valid Filename address (DS:SI)
+    mov     di, bx
+    repz cmpsb
+    add     bx, 0x20    ; Move to next DES if not valid
+    cmp     cx, 0x00
+    jne     Check_DES
+    mov     ax, [bx + DES.Cluster - 0x20]
+    mov     word[%3], ax
     popa
 %endmacro

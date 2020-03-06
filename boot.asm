@@ -40,7 +40,7 @@ EXTSupported:
     mov     byte[FAT.DAP + DAP.Size], 0x10
     ; ES:BX
     mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
-    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
+    mov     word[FAT.DAP + DAP.DestOffset], FAT.KernelCluster
     ; LBA && Length
     mov     ax, word[RootLBA]
     mov     word[FAT.DAP + DAP.LBA], ax
@@ -52,10 +52,8 @@ EXTSupported:
 
     call    Read
     jc      OnReadFail
-    mov     word[DESItem], FAT.DataArea
     ; Assuming kernel.bin IS present
-    FIND_SystemFile KRNFILE, 6, DESItem
-    ; TODO store cluster & size
+    FIND_SystemFile KRNFILE, 6, FAT.KernelCluster
 
 
     
@@ -65,6 +63,9 @@ EXTSupported:
     ; Modify DAP-Packet
     ;
     call    Disk_Reset
+    ; ES:BX
+    mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
+    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
     ; LBA && Length
     mov     ax, word[FATSLBA]
     mov     word[FAT.DAP + DAP.LBA], ax
@@ -99,7 +100,7 @@ FATSLBA     dw 0x0000
 ; CST DATA
 KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
-MG_INIT     db "v BasicOS boot", 13, 10, 0
+MG_INIT     db "BasicOS1.0", 13, 10, 0
 MG_ESPT     db "* Error.", 13, 10, 0
 MG_ELDG     db "* Error. Rebooting", 13, 10, 0
 MG_KRNF     db "- Kernel Found. Init", 13, 10, 0
