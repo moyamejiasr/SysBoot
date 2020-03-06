@@ -9,13 +9,13 @@ VGA_Init:
     ret
 
 ; PROCEDURE Printb
-; Prints hex number to screen
+; Prints hex byte to screen
 ; AL number value
 Printb:
     xor     ah, ah      ; Clear junk from ax
 
 ; FUNCTION Printw
-; Prints hex number to screen
+; Prints hex word to screen
 ; AX number value
 Printw:
     pusha
@@ -56,6 +56,20 @@ Print:
     jmp     .PRINTLOOP
     .PRINTEND:
     popa
+    ret
+
+; PROCEDURE Read
+; Read from drive
+; (mov dl, xx) DriveId
+; (mov dh, xx) Head
+; (mov cx, xx) hi 2 bits = cyl, low 6 bits = sector
+; (mov al, xx) Number of sectors
+; (ES:BX) Destination
+;
+; output:   cf (0 = success, 1 = failure)
+Read:
+    mov     ah, 0x02
+    int     0x13
     ret
 
 ; FUNCTION Loop
