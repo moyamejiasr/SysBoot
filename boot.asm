@@ -47,12 +47,12 @@ EXTSupported:
     mov     word[FAT.DAP + DAP.LBA], ax
     mov     ax, word[RootLen]
     mov     word[FAT.DAP + DAP.Len], ax
-
     ; Set DAP and Drive
     mov     si, FAT.DAP
     mov     dl, byte[DriveId]
+
     call    Read
-    jnc     Continue
+    jnc     ReadSuccess
     mov     si, MG_ELDG
     call    Print
     mov     cx, 0x2D
@@ -60,10 +60,13 @@ EXTSupported:
     call    Sleep
     call    Reboot
 
-Continue:
-    FIND_SystemFile KRNFILE, 11, FAT.DataArea
+ReadSuccess:
+    mov     word[DESItem], FAT.DataArea
+    FIND_SystemFile KRNFILE, 11, DESItem
     mov     si, MG_KRNF ; Assuming kernel.bin
     call    Print
+
+
     call    Loop
 
 %include "io.asm"
@@ -71,6 +74,7 @@ Continue:
 DriveId     db 0x00
 RootLBA     dw 0x0000
 RootLen     dw 0x0000
+DESItem     dw 0x0000
 ; CST DATA
 KRNFILE     db "KERNEL  ", "BIN"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]

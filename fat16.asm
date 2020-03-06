@@ -76,13 +76,13 @@ endstruc
 
 ; MACRO FIND_SystemFile
 ; Find file given a valid 11b len name in directory
-; 3 Filename, Size, DES
+; 3 Filename, Size, DESListItem
 %macro  FIND_SystemFile 3
     pusha
     ; ES:DI = Directory entry address
     mov     ax, ds
     mov     es, ax
-    mov     di, %3
+    mov     di, word[%3]
     ; DS:SI = Filename address
     mov     ax, %1
     mov     si, ax
@@ -91,5 +91,6 @@ Check_Entry:
     repz cmpsb          ; Compare filename to memory.
     add     di, 0x15    ; Move to next entry. 32-11=0x15 (Just in case)
     jne     Check_Entry
+    mov     word[%3], di
     popa
 %endmacro
