@@ -46,12 +46,6 @@ Printw:
     popa
     ret
 
-; FUNCTION Printe
-; Prints an endl
-;
-Printe:
-    mov     si, HX_JMP
-
 ; FUNCTION Print
 ; Print Text to screen using BIOS int 0x10 in Real Mode
 ; SI ptr message
@@ -126,4 +120,3 @@ Loop:
 HX_PRF      db "0x"
 HX_STR      db "0000", 0
 HX_LST      db '0123456789ABCDEF'
-HX_JMP      db 13, 10, 0

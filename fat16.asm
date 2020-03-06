@@ -45,6 +45,18 @@ struc DES
     .FileSize:      resd 1
 endstruc
 
+; MACRO EVAL_FATSSector
+; Calculate start sector of first FAT table
+; Reserved + Hidden
+; 1 Destination
+%macro  EVAL_FATSSector 1
+    pusha
+    mov     eax, dword[FAT.HiddenSectors]
+    add     ax, word[FAT.ReservedSectors]
+    mov     %1, ax
+    popa
+%endmacro
+
 ; MACRO EVAL_RootSector
 ; Calculate start sector of root directory
 ; FATCopies * SectorsPerFAT + Reserved + Hidden
@@ -87,9 +99,9 @@ endstruc
     mov     ax, %1
     mov     si, ax
 Check_Entry:
-    mov     cx, %2      ; Directory entries filenames are 11 bytes.
+    mov     cx, %2      ; Directory entries filenames size
     repz cmpsb          ; Compare filename to memory.
-    add     di, 0x15    ; Move to next entry. 32-11=0x15 (Just in case)
+    add     di, 0x20-%2 ; Move to next entry (Just in case)
     jne     Check_Entry
     mov     word[%3], di
     popa
