@@ -79,15 +79,17 @@ endstruc
 ; 3 Filename, Size, DES
 %macro  FIND_SystemFile 3
     pusha
-    mov     ax, ds      ; For correctly setting es
+    ; ES:DI = Directory entry address
+    mov     ax, ds
     mov     es, ax
-    mov     ax, %1      ; For ds:si = Filename address
+    mov     di, %3
+    ; DS:SI = Filename address
+    mov     ax, %1
     mov     si, ax
 Check_Entry:
     mov     cx, %2      ; Directory entries filenames are 11 bytes.
-    mov     di, %3      ; es:di = Directory entry address
     repz cmpsb          ; Compare filename to memory.
-    add     di, 0x20    ; Move to next entry. Entries are 32 bytes. (Just in case)
+    add     di, 0x15    ; Move to next entry. 32-11=0x15 (Just in case)
     jne     Check_Entry
     popa
 %endmacro
