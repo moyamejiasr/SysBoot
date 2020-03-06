@@ -1,0 +1,1 @@
+qemu-system-i386 bin/system.iso -monitor stdio

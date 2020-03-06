@@ -1,0 +1,1 @@
+minfo -i bin/system.iso
