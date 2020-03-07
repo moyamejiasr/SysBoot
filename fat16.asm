@@ -28,8 +28,7 @@ struc FAT
     ; Second sector (FREE)
     ;
     .DAP:               resb 16
-    .KernelCluster:     resw 1
-    .DataArea:          resb 494
+    .DataArea:          resb 496
 endstruc
 
 ; STRUCTURE DES (Directory Entry Structure)
@@ -47,19 +46,8 @@ struc DES
 endstruc
 
 ; DEFINITION Kernel Load Address
-%define KRNL_LoadOffset 0x8400  ; 0x07C0 * 0x10 + 0x8400 = 0x10000
-
-; MACRO EVAL_FATSSector
-; Calculate start sector of first FAT table
-; Reserved + Hidden
-; 1 Destination
-%macro  EVAL_FATSSector 1
-    pusha
-    mov     eax, dword[FAT.HiddenSectors]
-    add     ax, word[FAT.ReservedSectors]
-    mov     %1, ax
-    popa
-%endmacro
+; 0x07C0 * 0x10 + 0x8400 = 0x10000
+%define KRNL_LoadOffset 0x8400
 
 ; MACRO EVAL_RootSector
 ; Calculate start sector of root directory
@@ -90,10 +78,40 @@ endstruc
     popa
 %endmacro
 
+; MACRO EVAL_KernSector
+; Calculate start sector of kernel file
+; RootSector + RootLength + KernCluster - 2
+; 4 KernDES, RootLBA, RootLen, Destination
+%macro  EVAL_KernSector 4
+    pusha
+    mov     bx, %1
+    mov     ax, [bx + DES.Cluster]
+    add     ax, %2
+    add     ax, %3
+    sub     ax, 2
+    mov     %4, ax
+    popa
+%endmacro
+
+; MACRO EVAL_KernLength
+; Calculate lenght in sectors of root directory
+; FileSize(B) / BytesPerSector + 1
+; 2 KernDES, Destination
+%macro  EVAL_KernLength 2
+    pusha
+    mov     bx, %1
+    mov     eax, [bx + DES.FileSize]
+    xor     dx, dx      ; To divide DX:AX/
+    div     word[FAT.BytesPerSector]
+    add     ax, 0x01
+    mov     %2, ax
+    popa
+%endmacro
+
 ; MACRO FIND_SystemFile
 ; Find file given a valid 11b len name in directory
-; 3 Filename, Size, DESListItem
-%macro  FIND_SystemFile 3
+; 4 Filename, Size, DESListItem, DESKRNItem
+%macro  FIND_SystemFile 4
     pusha
     ; ES:BX(DI) = Directory entry address
     mov     ax, ds
@@ -107,7 +125,7 @@ Check_DES:
     add     bx, 0x20    ; Move to next DES if not valid
     cmp     cx, 0x00
     jne     Check_DES
-    mov     ax, [bx + DES.Cluster - 0x20]
-    mov     word[%3], ax
+    sub     bx, 0x20
+    mov     %4, bx
     popa
 %endmacro

@@ -37,7 +37,7 @@ EXTSupported:
     EVAL_RootLength word[RootLen] ; Size in sectors
     ; Modify DAP-Packet : Load Root Directory
     call    Disk_Reset
-    mov     word[FAT.DAP + DAP.DestOffset], FAT.KernelCluster
+    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
     ; LBA && Length
     mov     ax, word[RootLBA]
     mov     word[FAT.DAP + DAP.LBA], ax
@@ -48,36 +48,21 @@ EXTSupported:
     call    Read
     jc      OnReadFail
 
+    ; Find file
     ; Assuming kernel.bin IS present
-    FIND_SystemFile KRNFILE, 6, FAT.KernelCluster
+    FIND_SystemFile KRNFILE, 6, FAT.DataArea, word[DESItem]
 
-    ; Calculate FAT table
-    EVAL_FATSSector word[FATSLBA]
-    ; Modify DAP-Packet : Load Fat Table
-    call    Disk_Reset
-    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
-    ; LBA && Length
-    mov     ax, word[FATSLBA]
-    mov     word[FAT.DAP + DAP.LBA], ax
-    mov     ax, word[FAT.SectorsPerFAT]
-    mov     word[FAT.DAP + DAP.Len], ax
-    ; Set DAP and Drive
-    mov     si, FAT.DAP
-    call    Read
-    jc      OnReadFail
-
-    ; Get First kernel sector
-    mov     ax, [FAT.KernelCluster]
-    add     ax, [RootLBA]
-    add     ax, [RootLen]
-    sub     ax, 2
+    ; Calculate Kernel values
+    ; Assuming file sectors are one after the other
+    EVAL_KernSector [DESItem], [RootLBA], [RootLen], word[KrnlLBA] ; Starting sector (LBA)
+    EVAL_KernLength [DESItem], word[KrnlLen] ; Size in sectors
     ; Modify DAP-Packet
     call    Disk_Reset
     mov     word[FAT.DAP + DAP.DestOffset], KRNL_LoadOffset
     ; LBA && Length
-    ;mov     ax, word[FATSLBA]
+    mov     ax, word[KrnlLBA]
     mov     word[FAT.DAP + DAP.LBA], ax
-    mov     ax, 1
+    mov     ax, word[KrnlLen]
     mov     word[FAT.DAP + DAP.Len], ax
     ; Set DAP and Drive
     mov     si, FAT.DAP
@@ -89,18 +74,21 @@ EXTSupported:
     jmp     0x07C0:KRNL_LoadOffset
 
 OnReadFail:
+    mov     si, MG_ESPT
+    call    Print
     mov     cx, 0x2D
     mov     dx, 0xC6C0
     call    Sleep
     call    Reboot
 
 %include "io.asm"
-; SYS VARS
-DriveId     db 0x00
-RootLBA     dw 0x0000
-RootLen     dw 0x0000
-DESItem     dw 0x0000
-FATSLBA     dw 0x0000
+; VAR DATA
+DriveId     db 0x00     ; Boot drive ID
+RootLBA     dw 0x0000   ; Root logical block address (sectors)
+RootLen     dw 0x0000   ; Root length (sectors)
+DESItem     dw 0x0000   ; Valid Kernel DES entry
+KrnlLBA     dw 0x0000   ; Kernel logical block address (sectors)
+KrnlLen     dw 0x0000   ; Kernel length (sectors)
 ; CST DATA
 KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]

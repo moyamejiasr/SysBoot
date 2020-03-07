@@ -16,6 +16,28 @@ VGA_Init:
     int     0x10        ; Change video mode
     ret
 
+; FUNCTION Printw
+; Prints hex word to screen
+; AX number value
+Printw:
+    pusha
+    mov     di, HX_STR  ; Temp store pointer
+    mov     si, HX_LST  ; Keep Char List
+    mov     cx, 4
+    .PRINTHLOOP:
+    rol     ax, 4       ; move to left by 4
+    mov     bx, ax      ; copy to edit
+    and     bx, 0x0f    ; get index
+    mov     bl, [si + bx]
+    mov     [di], bl
+    inc     di
+    dec     cx
+    jnz     .PRINTHLOOP
+    mov     si, HX_PRF
+    call    Print
+    popa
+    ret
+
 ; FUNCTION Print
 ; Print Text to screen using BIOS int 0x10 in Real Mode
 ; SI ptr message
@@ -81,3 +103,9 @@ Reboot:
 ;
 Loop:
     jmp     Loop
+
+; STR LIST DATA
+HX_PRF      db "0x"
+HX_STR      db "0000", 0
+HX_LST      db '0123456789ABCDEF'
+HX_JMP      db 13, 10, 0
