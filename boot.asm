@@ -1,4 +1,4 @@
-; BasicOS Bootloader v1
+; Basic Bootloader v1
 ; Created by Onelio
 ;
 
@@ -91,7 +91,7 @@ KrnlLen     dw 0x0000   ; Kernel length (sectors)
 ; CST DATA
 KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
-MG_INIT     db "BasicOS boot 1.0", 13, 10, 0
+MG_INIT     db "BasicBoot v1.0", 13, 10, 0
 MG_ESPT     db "* Not supported", 13, 10, 0
 MG_ERDN     db "* Error at read", 13, 10, "Rebooting..", 0
 ; Fill bytes with 0x00 up to magic numb
