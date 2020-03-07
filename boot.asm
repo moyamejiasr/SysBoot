@@ -87,7 +87,8 @@ EXTSupported:
     jc      OnReadFail
 
 
-    call    Loop
+    ;call    Loop
+    jmp     FAT.DataArea
 
 OnReadFail:
     mov     cx, 0x2D
@@ -107,7 +108,6 @@ KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
 MG_INIT     db "BasicOS1.0", 13, 10, 0
 MG_ESPT     db "* Error", 13, 10, 0
-MG_KRNF     db "- Ok", 13, 10, 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
