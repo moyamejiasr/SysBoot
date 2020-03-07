@@ -24,7 +24,7 @@ Main:
     call    Print
     ; I13 Extension check & init packet
     mov     byte[FAT.DAP + DAP.Size], 0x10
-    mov     word[FAT.DAP + DAP.DestSegment], 0x07C0
+    mov     word[FAT.DAP + DAP.DestSegmnt], 0x07C0
     call    I13EXT_Check
     jnc     EXTSupported
     mov     si, MG_ESPT
@@ -37,7 +37,6 @@ EXTSupported:
     EVAL_RootLength word[RootLen] ; Size in sectors
     ; Modify DAP-Packet : Load Root Directory
     call    Disk_Reset
-    ; ES:BX
     mov     word[FAT.DAP + DAP.DestOffset], FAT.KernelCluster
     ; LBA && Length
     mov     ax, word[RootLBA]
@@ -56,7 +55,6 @@ EXTSupported:
     EVAL_FATSSector word[FATSLBA]
     ; Modify DAP-Packet : Load Fat Table
     call    Disk_Reset
-    ; ES:BX
     mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
     ; LBA && Length
     mov     ax, word[FATSLBA]
@@ -74,8 +72,7 @@ EXTSupported:
     sub     ax, 2
     ; Modify DAP-Packet
     call    Disk_Reset
-    ; ES:BX
-    mov     word[FAT.DAP + DAP.DestOffset], FAT.DataArea
+    mov     word[FAT.DAP + DAP.DestOffset], KRNL_LoadOffset
     ; LBA && Length
     ;mov     ax, word[FATSLBA]
     mov     word[FAT.DAP + DAP.LBA], ax
@@ -88,7 +85,7 @@ EXTSupported:
 
 
     ;call    Loop
-    jmp     FAT.DataArea
+    jmp     0x07C0:KRNL_LoadOffset
 
 OnReadFail:
     mov     cx, 0x2D

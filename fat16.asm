@@ -46,6 +46,9 @@ struc DES
     .FileSize:      resd 1
 endstruc
 
+; DEFINITION Kernel Load Address
+%define KRNL_LoadOffset 0x8400
+
 ; MACRO EVAL_FATSSector
 ; Calculate start sector of first FAT table
 ; Reserved + Hidden

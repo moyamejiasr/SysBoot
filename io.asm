@@ -4,7 +4,7 @@ struc DAP
     .Reserved:      resb 1
     .Len:           resw 1
     .DestOffset:    resw 1
-    .DestSegment:   resw 1
+    .DestSegmnt:    resw 1
     .LBA:           resd 1
 endstruc
 

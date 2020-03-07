@@ -1,16 +1,16 @@
 [BITS 16]
-
-;SysIO Functions load
-    jmp     Main
-%include "io.asm"
-
+[ORG 0x8400]
 Main:
-    lea     si,[MG_INI]
-    call    Print
+    mov     ah, 0x0E
+    mov     si, MG_INI
+Repeat:
+    lodsb
+    cmp     al, 00h
+    jz      Loop
+    int     0x10
+    jmp     Repeat
 
+Loop:
     call    Loop
 
-MG_INI db " - OK!", 13, 10, 0
-
-;Fill bytes with 0x00 up to end sector
-times (512 - ($ - $$)) db 0x00
+MG_INI db "- Kernel Loaded!", 13, 10, 0
