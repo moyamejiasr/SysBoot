@@ -66,6 +66,7 @@ EXTSupported:
     call    Read
     jc      OnReadFail
 
+    ; Get First kernel sector
     mov     ax, [FAT.KernelCluster]
     add     ax, [RootLBA]
     add     ax, [RootLen]

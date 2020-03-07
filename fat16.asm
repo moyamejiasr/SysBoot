@@ -47,7 +47,7 @@ struc DES
 endstruc
 
 ; DEFINITION Kernel Load Address
-%define KRNL_LoadOffset 0x8400
+%define KRNL_LoadOffset 0x8400  ; 0x07C0 * 0x10 + 0x8400 = 0x10000
 
 ; MACRO EVAL_FATSSector
 ; Calculate start sector of first FAT table
