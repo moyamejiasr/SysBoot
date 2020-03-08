@@ -26,12 +26,11 @@ Main:
     mov     byte[FAT.DAP + DAP.Size], 0x10
     mov     word[FAT.DAP + DAP.DestSegmnt], 0x07C0
     call    I13EXT_Check
-    jnc     EXTSupported
-    mov     si, MG_ESPT
-    call    Print
-    call    Loop        ; Die if no supported
+    jc      OnNotSupported
+    ; Enable A20 Line (if supported)
+    call    A20_Init
+    jc      OnNotSupported
 
-EXTSupported:
     ; Calculate Root values
     EVAL_RootSector word[RootLBA] ; Starting sector (LBA)
     EVAL_RootLength word[RootLen] ; Size in sectors
@@ -54,10 +53,12 @@ EXTSupported:
 
     ; Calculate Kernel values
     ; Assuming file sectors are one after the other
+    mov     word[FAT.DAP + DAP.DestSegmnt], 0x07C0
     EVAL_KernSector [DESItem], [RootLBA], [RootLen], word[KrnlLBA] ; Starting sector (LBA)
     EVAL_KernLength [DESItem], word[KrnlLen] ; Size in sectors
     ; Modify DAP-Packet
     call    Disk_Reset
+    mov     word[FAT.DAP + DAP.DestSegmnt], KRNL_LoadSegmnt
     mov     word[FAT.DAP + DAP.DestOffset], KRNL_LoadOffset
     ; LBA && Length
     mov     ax, word[KrnlLBA]
@@ -69,8 +70,15 @@ EXTSupported:
     call    Read
     jc      OnReadFail
 
-    ; TODO Enter protected mode
-    jmp     0x07C0:KRNL_LoadOffset
+    ; Jump to kernel
+    mov     ax, KRNL_LoadSegmnt
+    mov     ds, ax      ; Update seg-register
+    jmp     KRNL_LoadSegmnt:KRNL_LoadOffset
+
+OnNotSupported:
+    mov     si, MG_ESPT
+    call    Print
+    call    Loop        ; Die if no supported
 
 OnReadFail:
     mov     si, MG_ERDN
@@ -91,9 +99,9 @@ KrnlLen     dw 0x0000   ; Kernel length (sectors)
 ; CST DATA
 KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
-MG_INIT     db "v SysBoot1.0 init", 13, 10, 0
-MG_ESPT     db "* Not supported", 13, 10, 0
-MG_ERDN     db "* Error on read", 13, 10, "Rebooting..", 0
+MG_INIT     db "- SysBoot1.0 init", 13, 10, 0
+MG_ESPT     db "X Not supported", 13, 10, 0
+MG_ERDN     db "X Error reading", 13, 10, "- Reboot", 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
