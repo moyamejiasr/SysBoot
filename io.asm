@@ -72,33 +72,14 @@ Read:
     popa
     ret
 
-; FUNCTION A20_Check
-; Check A20 Line status
-; 
-A20_Check:
-    pusha
-    xor ax, ax          ; Set es:di = 0000:7DFE
-    mov es, ax
-    mov di, 0x0500
-    mov bl, [es:di]     ; Take 1st address byte
-    
-    mov ax, 0xFFFF      ; Set ds:si = ffff:7E0E
-    mov ds, ax             
-    mov si, 0x0510 
-    mov bh, [ds:si]     ; Take 2st address byte
-
-    cmp bl, bh          ; Did memory wrap around?
-    jmp Loop
-    popa
-    ret
-
 ; FUNCTION A20_Init
 ; Initialize A20 Line for full Real-mode memory access
 ; 
 A20_Init:
-    call A20_Check
+    pusha
     mov     ax, 0x2401
     int     0x15
+    popa
     ret
 
 ; FUNCTION Reboot
