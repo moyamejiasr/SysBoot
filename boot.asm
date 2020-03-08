@@ -1,10 +1,9 @@
-; SysBoot v1
-; Created by Onelio
+; SysBootloader v1
 ;
 
 %include "fat16.asm"
 [BITS 16]               ; 16bt Mode Processor
-[ORG FAT.CodeSection] ; Jump FAT table data
+[ORG FAT.CodeSection]   ; Jump FAT table data
 
 ; FUNCTION Main
 ; Main sector loader
@@ -99,9 +98,9 @@ KrnlLen     dw 0x0000   ; Kernel length (sectors)
 ; CST DATA
 KRNFILE     db "KERNEL"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
-MG_INIT     db "- SysBoot1.0 init", 13, 10, 0
+MG_INIT     db "- SysBootloader1.0 init", 13, 10, 0
 MG_ESPT     db "X Not supported", 13, 10, 0
-MG_ERDN     db "X Error reading", 13, 10, "- Reboot", 0
+MG_ERDN     db "X Error while reading", 13, 10, "- Rebooting..", 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  

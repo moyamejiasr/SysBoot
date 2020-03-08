@@ -46,7 +46,7 @@ struc DES
 endstruc
 
 ; DEFINITION Kernel Load Address
-; 0x07C0 * 0x10 + 0x8400 = 0x10000
+; 0xF7C0 * 0x10 + 0x8400 = 0x100000
 %define KRNL_LoadSegmnt 0xF7C0
 %define KRNL_LoadOffset 0x8400
 

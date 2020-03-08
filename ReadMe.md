@@ -4,5 +4,4 @@ A basic single-file bootloader made with academic purpose. It uses FAT16 for the
 *IN DEVELOPMENT*
 
 ## To-Do
-- Add Protected Mode
-- Add Magic number check
+- Add Protected Mode [From kernel]
