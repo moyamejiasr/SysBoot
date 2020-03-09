@@ -1,4 +1,4 @@
-; SysBootloader v1
+; SysBootloader v1.0
 ;
 
 %include "fat16.asm"
@@ -48,7 +48,7 @@ Main:
 
     ; Find file
     ; Assuming kernel.bin IS present
-    FIND_SystemFile KRNFILE, 6, FAT.DataArea, word[DESItem]
+    FIND_SystemFile KRNFILE, 11, FAT.DataArea, word[DESItem]
 
     ; Calculate Kernel values
     ; Assuming file sectors are one after the other
@@ -96,11 +96,11 @@ DESItem     dw 0x0000   ; Valid Kernel DES entry
 KrnlLBA     dw 0x0000   ; Kernel logical block address (sectors)
 KrnlLen     dw 0x0000   ; Kernel length (sectors)
 ; CST DATA
-KRNFILE     db "KERNEL"
+KRNFILE     db "KERNEL  BIN"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
 MG_INIT     db "- SysBootloader1.0 init", 13, 10, 0
 MG_ESPT     db "X Not supported", 13, 10, 0
-MG_ERDN     db "X Error while reading", 13, 10, "- Rebooting..", 0
+MG_ERDN     db "X Error on reading", 13, 10, "- Rebooting..", 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
