@@ -12,10 +12,33 @@ endstruc
 ; Initialize VGA video mode
 ; 
 VGA_Init:
-    pusha
     mov     ax, 0x03    ; 0x03 (80x25, 4-bit)
     int     0x10        ; Change video mode
+    ret
+
+; FUNCTION I13EXT_Check
+; Check if INT13 extensions are available
+; DL DriveId
+I13EXT_Check:
+    pusha
+    mov     ah, 41h
+    mov     bx, 55AAh
+    int     13h
     popa
+    ret
+
+; FUNCTION A20_Init
+; Initialize A20 Line for full Real-mode memory access
+; No keyboard method because of the lack of space
+; 
+A20_Init:
+    ; Try Bios method
+    mov     ax, 0x2401
+    int     0x15
+    ; Try FAST activate
+    in      al, 0x92
+    or      al, 2
+    out     0x92, al
     ret
 
 ; FUNCTION Print
@@ -46,21 +69,8 @@ Sleep:
 ; Reset disk position
 ; 
 Disk_Reset:
-    pusha
     xor     ah, ah
     int     0x13
-    popa
-    ret
-
-; FUNCTION I13EXT_Check
-; Check if INT13 extensions are available
-; DL DriveId
-I13EXT_Check:
-    pusha
-    mov     ah, 41h
-    mov     bx, 55AAh
-    int     13h
-    popa
     ret
 
 ; FUNCTION Read
@@ -70,26 +80,8 @@ I13EXT_Check:
 ;
 ; output:   cf (0 = success, 1 = failure)
 Read:
-    pusha
     mov     ah, 0x42
     int     0x13
-    popa
-    ret
-
-; FUNCTION A20_Init
-; Initialize A20 Line for full Real-mode memory access
-; No keyboard method because of the lack of space
-; 
-A20_Init:
-    pusha
-    ; Try Bios method
-    mov     ax, 0x2401
-    int     0x15
-    ; Try FAST activate
-    in      al, 0x92
-    or      al, 2
-    out     0x92, al
-    popa
     ret
 
 ; FUNCTION Reboot

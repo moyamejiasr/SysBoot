@@ -1,4 +1,4 @@
-; SysBootloader v1.0
+; SysBoot v1.0
 ;
 
 %include "fat16.asm"
@@ -98,9 +98,9 @@ KrnlLen     dw 0x0000   ; Kernel length (sectors)
 ; CST DATA
 KRNFILE     db "KERNEL  BIN"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
-MG_INIT     db "- SysBootloader1.0 init", 13, 10, 0
+MG_INIT     db "- SysBoot v1.0 init", 13, 10, 0
 MG_ESPT     db "X Not supported", 13, 10, 0
-MG_ERDN     db "X Error on reading", 13, 10, "- Rebooting..", 0
+MG_ERDN     db "X Error reading", 13, 10, "- Rebooting..", 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
