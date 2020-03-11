@@ -57,7 +57,6 @@ Main:
     EVAL_KernLength [DESItem], word[KrnlLen] ; Size in sectors
     ; Modify DAP-Packet
     call    Disk_Reset
-    mov     word[FAT.DAP + DAP.DestSegmnt], KRNL_LoadSegmnt
     mov     word[FAT.DAP + DAP.DestOffset], KRNL_LoadOffset
     ; LBA && Length
     mov     ax, word[KrnlLBA]
@@ -70,8 +69,6 @@ Main:
     jc      OnReadFail
 
     ; Jump to kernel
-    mov     ax, KRNL_LoadSegmnt
-    mov     ds, ax      ; Update seg-register
     jmp     KRNL_LoadSegmnt:KRNL_LoadOffset
 
 OnNotSupported:
@@ -100,7 +97,7 @@ KRNFILE     db "KERNEL  BIN"
 ; MG LIST DATA [13(\r) 10(\n) 0(\0)]
 MG_INIT     db "- SysBoot v1.0 init", 13, 10, 0
 MG_ESPT     db "X Not supported", 13, 10, 0
-MG_ERDN     db "X Error reading", 13, 10, "- Rebooting..", 0
+MG_ERDN     db "X Error while reading", 13, 10, "- Rebooting..", 0
 ; Fill bytes with 0x00 up to magic numb
 ; Magic Number for the BIOS check.
 times (510 - 0x003E - ($ - $$)) db 0x00  
