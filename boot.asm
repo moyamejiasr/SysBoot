@@ -2,7 +2,7 @@
 ;
 
 %include "fat16.asm"
-[BITS 16]               ; 16bt Mode Processor
+[BITS 16]               ; 16bit Mode Processor
 [ORG FAT.CodeSection]   ; Jump FAT table data
 
 ; FUNCTION Main
